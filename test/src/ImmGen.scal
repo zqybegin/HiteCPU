@@ -1,0 +1,29 @@
+package hiteCPU
+
+import chisel3._
+import chisel3.util._
+
+import Config._
+import Const._
+
+class ImmGenPort extends Bundle {
+  val inst = Input(UInt(XLEN.W))
+  val sel  = Input(UInt(IMM_LENGTH.W))
+  val data = Output(UInt(XLEN.W))
+}
+
+class ImmGen extends RawModule {
+  val io = IO(new ImmGenPort)
+
+  io.data := Mux1H{
+    Seq (
+      (io.sel === IMM_I) -> io.inst(31, 20).asSInt,
+      (io.sel === IMM_S) -> Cat(io.inst(31, 25), io.inst(11, 7)).asSInt,
+      (io.sel === IMM_U) -> Cat(io.inst(31, 12), 0.U(12.W)).asSInt,
+      (io.sel === IMM_J) -> Cat(io.inst(31), io.inst(19, 12), io.inst(20), io.inst(30, 25), io.inst(24, 21), 0.U(1.W)).asSInt,
+      (io.sel === IMM_B) -> Cat(io.inst(31), io.inst(7), io.inst(30, 25), io.inst(11, 8), 0.U(1.W)).asSInt,
+      (io.sel === IMM_Z) -> io.inst(19, 15).zext,
+    )
+  }
+}
+
