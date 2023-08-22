@@ -29,6 +29,7 @@ class Core extends Module {
   val regfile= Module(new RegFile)
   regfile.io.read1.addr := io.mem.resp.data(19,15)
   regfile.io.read2.addr := io.mem.resp.data(24,20)
+  regfile.io.halt.addr  := 10.U
 
 
   val imm = Mux1H(
@@ -62,19 +63,20 @@ class Core extends Module {
   alu.io.src2 := opdata2
 
   // --------------- Execute Stage --------------- //
-  regfile.io.write.valid := true.B
+  regfile.io.write.valid := decoder.io.wb_en
   regfile.io.write.addr  := inst(11,7)
   regfile.io.write.data  := alu.io.out
 
   // --------------- DPI-C halt --------------- //
   val halt = Module(new Halt)
-  halt.io.in := decoder.io.halt
+  halt.io.valid := decoder.io.halt
+  halt.io.value := regfile.io.halt.data
 
   // --------------- Top signal --------------- //
   io.mem.req.valid := !reset.asBool
   io.mem.req.bits.addr := pc + 4.U
 
-  io.test.valid := true.B
+  io.test.valid := decoder.io.wb_en
   io.test.addr  := inst(11,7)
   io.test.data  := alu.io.out
 

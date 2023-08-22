@@ -104,8 +104,6 @@ object Const {
   val CSR_C = 3.U(CSR_LENGTH.W)
   val CSR_P = 4.U(CSR_LENGTH.W)
 
-  def isSub(sel: UInt) = (sel === ALU_SUB)
-
 }
 
 object Instructions {
