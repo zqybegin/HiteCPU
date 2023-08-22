@@ -1,6 +1,7 @@
 include ../Makefile
 
 MODULE = Toplevel
+IMG =
 
 V_RSC = $(shell find $(abspath ./generated) -name "*.v")
 C_RSC = $(shell find $(abspath ./sim) -name "*.cpp")
@@ -16,17 +17,15 @@ $(V_RESULT):$(SCALA_RSC)
 	mill hiteCPU.run
 
 $(EXE):$(V_RSC) $(C_RSC) $(V_RESULT)
-	verilator --trace -cc --build --x-assign 1 --top-module $(MODULE) -exe $(V_RSC) $(C_RSC) --Mdir $(BUILD_DIR) -o $(EXE)
-
-$(VCD):$(EXE)
-	$(EXE)
-	mv ./dump.vcd $(VCD)
+	verilator --trace -cc --build  --top-module $(MODULE) -exe $(V_RSC) $(C_RSC) --Mdir $(BUILD_DIR) -o $(EXE)
 
 .PHONY:verilog sim clean bsp echo
 
 verilog:$(V_RESULT)
 
-sim:$(VCD)
+sim:$(EXE)
+	$(EXE) $(IMG)
+	mv ./dump.vcd $(VCD)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
 	gtkwave $(BUILD_DIR)/dump.vcd
 
