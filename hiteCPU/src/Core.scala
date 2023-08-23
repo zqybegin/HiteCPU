@@ -45,7 +45,7 @@ class Core extends Module {
   val opdata1 = Mux1H(
     Seq (
       (decoder.io.A_sel === A_RS1) -> regfile.io.read1.data,
-      (decoder.io.A_sel === A_PC)  -> 0.U,
+      (decoder.io.A_sel === A_PC)  -> pc,
     )
   )
 
@@ -65,7 +65,7 @@ class Core extends Module {
   // --------------- Execute Stage --------------- //
   regfile.io.write.valid := decoder.io.wb_en
   regfile.io.write.addr  := inst(11,7)
-  regfile.io.write.data  := alu.io.out
+  regfile.io.write.data  := alu.io.alu_out
 
   // --------------- DPI-C halt --------------- //
   val halt = Module(new Halt)
@@ -78,6 +78,6 @@ class Core extends Module {
 
   io.test.valid := decoder.io.wb_en
   io.test.addr  := inst(11,7)
-  io.test.data  := alu.io.out
+  io.test.data  := alu.io.alu_out
 
 }

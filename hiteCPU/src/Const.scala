@@ -26,83 +26,84 @@ object Const {
   val PC_EPC = 3.U(PC_SEL_LENGTH.W)
 
   // A_sel
-  val A_LENGTH = 1
-  val A_XXX = 0.U(A_LENGTH.W)
-  val A_PC  = 0.U(A_LENGTH.W)
-  val A_RS1 = 1.U(A_LENGTH.W)
+  val A_SEL_LENGTH = 1
+  val A_XXX = 0.U(A_SEL_LENGTH.W)
+  val A_PC  = 0.U(A_SEL_LENGTH.W)
+  val A_RS1 = 1.U(A_SEL_LENGTH.W)
 
   // B_sel
-  val B_LENGTH = 1
-  val B_XXX = 0.U(A_LENGTH.W)
-  val B_IMM = 0.U(B_LENGTH.W)
-  val B_RS2 = 1.U(B_LENGTH.W)
+  val B_SEL_LENGTH = 1
+  val B_XXX = 0.U(B_SEL_LENGTH.W)
+  val B_IMM = 0.U(B_SEL_LENGTH.W)
+  val B_RS2 = 1.U(B_SEL_LENGTH.W)
 
   // imm_sel
-  val IMM_LENGTH = 3
-  val IMM_X = 0.U(IMM_LENGTH.W)
-  val IMM_I = 1.U(IMM_LENGTH.W)
-  val IMM_S = 2.U(IMM_LENGTH.W)
-  val IMM_U = 3.U(IMM_LENGTH.W)
-  val IMM_J = 4.U(IMM_LENGTH.W)
-  val IMM_B = 5.U(IMM_LENGTH.W)
-  val IMM_Z = 6.U(IMM_LENGTH.W)
+  val IMM_SEL_LENGTH = 3
+  val IMM_X = 0.U(IMM_SEL_LENGTH.W)
+  val IMM_I = 1.U(IMM_SEL_LENGTH.W)
+  val IMM_S = 2.U(IMM_SEL_LENGTH.W)
+  val IMM_U = 3.U(IMM_SEL_LENGTH.W)
+  val IMM_J = 4.U(IMM_SEL_LENGTH.W)
+  val IMM_B = 5.U(IMM_SEL_LENGTH.W)
+  val IMM_Z = 6.U(IMM_SEL_LENGTH.W)
 
   // alu_sel
-  val ALU_LENGTH = 4
-  val ALU_ADD    = 0.U(ALU_LENGTH.W)
-  val ALU_SUB    = 1.U(ALU_LENGTH.W)
-  val ALU_AND    = 2.U(ALU_LENGTH.W)
-  val ALU_OR     = 3.U(ALU_LENGTH.W)
-  val ALU_XOR    = 4.U(ALU_LENGTH.W)
-  val ALU_SLT    = 5.U(ALU_LENGTH.W)
-  val ALU_SLL    = 6.U(ALU_LENGTH.W)
-  val ALU_SLTU   = 7.U(ALU_LENGTH.W)
-  val ALU_SRL    = 8.U(ALU_LENGTH.W)
-  val ALU_SRA    = 9.U(ALU_LENGTH.W)
-  val ALU_COPY_A = 10.U(ALU_LENGTH.W)
-  val ALU_COPY_B = 11.U(ALU_LENGTH.W)
-  val ALU_XXX    = 15.U(ALU_LENGTH.W)
+  val ALU_SEL_LENGTH = 4
+  val ALU_XXX    = 0.U(ALU_SEL_LENGTH.W)
+  val ALU_ADD    = 0.U(ALU_SEL_LENGTH.W)
+  val ALU_SLL    = 1.U(ALU_SEL_LENGTH.W)
+  val ALU_SEQ    = 2.U(ALU_SEL_LENGTH.W)
+  val ALU_SNE    = 3.U(ALU_SEL_LENGTH.W)
+  val ALU_XOR    = 4.U(ALU_SEL_LENGTH.W)
+  val ALU_SRL    = 5.U(ALU_SEL_LENGTH.W)
+  val ALU_OR     = 6.U(ALU_SEL_LENGTH.W)
+  val ALU_AND    = 7.U(ALU_SEL_LENGTH.W)
+  val ALU_COPY_A = 8.U(ALU_SEL_LENGTH.W)
+  val ALU_COPY_B = 9.U(ALU_SEL_LENGTH.W)
+  val ALU_SUB    = 10.U(ALU_SEL_LENGTH.W)
+  val ALU_SRA    = 11.U(ALU_SEL_LENGTH.W)
+  val ALU_SLT    = 12.U(ALU_SEL_LENGTH.W)
+  val ALU_SGE    = 13.U(ALU_SEL_LENGTH.W)
+  val ALU_SLTU   = 14.U(ALU_SEL_LENGTH.W)
+  val ALU_SGEU   = 15.U(ALU_SEL_LENGTH.W)
 
-  // br_type
-  val BR_LENGTH = 3
-  val BR_XXX = 0.U(BR_LENGTH.W)
-  val BR_LTU = 1.U(BR_LENGTH.W)
-  val BR_LT  = 2.U(BR_LENGTH.W)
-  val BR_EQ  = 3.U(BR_LENGTH.W)
-  val BR_GEU = 4.U(BR_LENGTH.W)
-  val BR_GE  = 5.U(BR_LENGTH.W)
-  val BR_NE  = 6.U(BR_LENGTH.W)
+  def isSub(alu_op: UInt) = alu_op(3)
+  def shiftSigned(alu_op: UInt) = alu_op(3)
+  def isCmp(alu_op: UInt) = alu_op >= ALU_SLT
+  def cmpUnsigned(alu_op: UInt) = alu_op(1)
+  def cmpInverted(alu_op: UInt) = alu_op(0)
+  def cmpEq(alu_op: UInt) = !alu_op(3)
 
   // st_type
-  val ST_LENGTH = 2
-  val ST_XXX = 0.U(ST_LENGTH.W)
-  val ST_SW  = 1.U(ST_LENGTH.W)
-  val ST_SH  = 2.U(ST_LENGTH.W)
-  val ST_SB  = 3.U(ST_LENGTH.W)
+  val ST_SEL_LENGTH = 2
+  val ST_XXX = 0.U(ST_SEL_LENGTH.W)
+  val ST_SW  = 1.U(ST_SEL_LENGTH.W)
+  val ST_SH  = 2.U(ST_SEL_LENGTH.W)
+  val ST_SB  = 3.U(ST_SEL_LENGTH.W)
 
   // ld_type
-  val LD_LENGTH = 3
-  val LD_XXX = 0.U(LD_LENGTH.W)
-  val LD_LW  = 1.U(LD_LENGTH.W)
-  val LD_LH  = 2.U(LD_LENGTH.W)
-  val LD_LB  = 3.U(LD_LENGTH.W)
-  val LD_LHU = 4.U(LD_LENGTH.W)
-  val LD_LBU = 5.U(LD_LENGTH.W)
+  val LD_SEL_LENGTH = 3
+  val LD_XXX = 0.U(LD_SEL_LENGTH.W)
+  val LD_LW  = 1.U(LD_SEL_LENGTH.W)
+  val LD_LH  = 2.U(LD_SEL_LENGTH.W)
+  val LD_LB  = 3.U(LD_SEL_LENGTH.W)
+  val LD_LHU = 4.U(LD_SEL_LENGTH.W)
+  val LD_LBU = 5.U(LD_SEL_LENGTH.W)
 
   // wb_sel
-  val WB_LENGTH = 2
-  val WB_ALU = 0.U(WB_LENGTH.W)
-  val WB_MEM = 1.U(WB_LENGTH.W)
-  val WB_PC4 = 2.U(WB_LENGTH.W)
-  val WB_CSR = 3.U(WB_LENGTH.W)
+  val WB_SEL_LENGTH = 2
+  val WB_ALU = 0.U(WB_SEL_LENGTH.W)
+  val WB_MEM = 1.U(WB_SEL_LENGTH.W)
+  val WB_PC4 = 2.U(WB_SEL_LENGTH.W)
+  val WB_CSR = 3.U(WB_SEL_LENGTH.W)
 
   //csr_cmd
-  val CSR_LENGTH = 3
-  val CSR_N = 0.U(CSR_LENGTH.W)
-  val CSR_W = 1.U(CSR_LENGTH.W)
-  val CSR_S = 2.U(CSR_LENGTH.W)
-  val CSR_C = 3.U(CSR_LENGTH.W)
-  val CSR_P = 4.U(CSR_LENGTH.W)
+  val CSR_SEL_LENGTH = 3
+  val CSR_N = 0.U(CSR_SEL_LENGTH.W)
+  val CSR_W = 1.U(CSR_SEL_LENGTH.W)
+  val CSR_S = 2.U(CSR_SEL_LENGTH.W)
+  val CSR_C = 3.U(CSR_SEL_LENGTH.W)
+  val CSR_P = 4.U(CSR_SEL_LENGTH.W)
 
 }
 
