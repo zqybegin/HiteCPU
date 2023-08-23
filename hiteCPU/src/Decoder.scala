@@ -9,11 +9,17 @@ import Instructions._
 
 class DecoderPort extends Bundle {
   val inst    = Input(UInt(XLEN.W))
+  // Control signals for Fetch
+  val pc_sel  = Output(UInt(PC_SEL_LENGTH.W))
+  // Control signals for Execute
   val A_sel   = Output(UInt(A_SEL_LENGTH.W))
   val B_sel   = Output(UInt(B_SEL_LENGTH.W))
   val imm_sel = Output(UInt(IMM_SEL_LENGTH.W))
   val alu_op  = Output(UInt(ALU_SEL_LENGTH.W))
+  // Control signals for WriteBack
   val wb_en   = Output(Bool())
+  val wb_sel  = Output(UInt(WB_SEL_LENGTH.W))
+  // Control signals for Halt
   val halt    = Output(Bool())
 }
 
@@ -24,20 +30,20 @@ class Decoder extends RawModule {
     ListLookup(
       io.inst,
       /*                                                                                  wb_en  illegal?
-                     pc_sel  A_sel   B_sel  imm_sel   alu_op  kill st_type ld_type wb_sel  | csr_cmd |
+                     pc_sel  A_sel   B_sel  imm_sel   alu_op  halt st_type ld_type wb_sel  | csr_cmd |
                        |       |       |     |          |       |     |       |       |    |  |      |    */
-      List(           PC_4  , A_XXX,  B_XXX, IMM_X, ALU_XXX   , N, ST_XXX, LD_XXX, WB_ALU, N, CSR_N, Y),
+      List(           PC_4  , A_XXX,  B_XXX, IMM_X, ALU_XXX   , N, ST_XXX, LD_XXX, WB_XXX, N, CSR_N, Y),
       Array(
         LUI   -> List(PC_4  , A_XXX,  B_IMM, IMM_U, ALU_COPY_B, N, ST_XXX, LD_XXX, WB_ALU, Y, CSR_N, N),
         AUIPC -> List(PC_4  , A_PC,   B_IMM, IMM_U, ALU_ADD   , N, ST_XXX, LD_XXX, WB_ALU, Y, CSR_N, N),
-        // JAL   -> List(PC_ALU, A_PC,   B_IMM, IMM_J, ALU_ADD   , Y, ST_XXX, LD_XXX, WB_PC4, Y, CSR_N, N),
-        // JALR  -> List(PC_ALU, A_RS1,  B_IMM, IMM_I, ALU_ADD   , Y, ST_XXX, LD_XXX, WB_PC4, Y, CSR_N, N),
-        // BEQ   -> List(PC_4  , A_PC,   B_IMM, IMM_B, ALU_SEQ   , N, ST_XXX, LD_XXX, WB_ALU, N, CSR_N, N),
-        // BNE   -> List(PC_4  , A_PC,   B_IMM, IMM_B, ALU_SNE   , N, ST_XXX, LD_XXX, WB_ALU, N, CSR_N, N),
-        // BLT   -> List(PC_4  , A_PC,   B_IMM, IMM_B, ALU_SLT   , N, ST_XXX, LD_XXX, WB_ALU, N, CSR_N, N),
-        // BGE   -> List(PC_4  , A_PC,   B_IMM, IMM_B, ALU_SGE   , N, ST_XXX, LD_XXX, WB_ALU, N, CSR_N, N),
-        // BLTU  -> List(PC_4  , A_PC,   B_IMM, IMM_B, ALU_SLTU  , N, ST_XXX, LD_XXX, WB_ALU, N, CSR_N, N),
-        // BGEU  -> List(PC_4  , A_PC,   B_IMM, IMM_B, ALU_SGEU  , N, ST_XXX, LD_XXX, WB_ALU, N, CSR_N, N),
+        JAL   -> List(PC_ALU, A_PC,   B_IMM, IMM_J, ALU_ADD   , N, ST_XXX, LD_XXX, WB_PC4, Y, CSR_N, N),
+        JALR  -> List(PC_ALU, A_RS1,  B_IMM, IMM_I, ALU_ADD   , N, ST_XXX, LD_XXX, WB_PC4, Y, CSR_N, N),
+        BEQ   -> List(PC_BR , A_PC,   B_IMM, IMM_B, ALU_SEQ   , N, ST_XXX, LD_XXX, WB_XXX, N, CSR_N, N),
+        BNE   -> List(PC_BR , A_PC,   B_IMM, IMM_B, ALU_SNE   , N, ST_XXX, LD_XXX, WB_XXX, N, CSR_N, N),
+        BLT   -> List(PC_BR , A_PC,   B_IMM, IMM_B, ALU_SLT   , N, ST_XXX, LD_XXX, WB_XXX, N, CSR_N, N),
+        BGE   -> List(PC_BR , A_PC,   B_IMM, IMM_B, ALU_SGE   , N, ST_XXX, LD_XXX, WB_XXX, N, CSR_N, N),
+        BLTU  -> List(PC_BR , A_PC,   B_IMM, IMM_B, ALU_SLTU  , N, ST_XXX, LD_XXX, WB_XXX, N, CSR_N, N),
+        BGEU  -> List(PC_BR , A_PC,   B_IMM, IMM_B, ALU_SGEU  , N, ST_XXX, LD_XXX, WB_XXX, N, CSR_N, N),
         // LB    -> List(PC_0  , A_RS1,  B_IMM, IMM_I, ALU_ADD   , Y, ST_XXX, LD_LB , WB_MEM, Y, CSR_N, N),
         // LH    -> List(PC_0  , A_RS1,  B_IMM, IMM_I, ALU_ADD   , Y, ST_XXX, LD_LH , WB_MEM, Y, CSR_N, N),
         // LW    -> List(PC_0  , A_RS1,  B_IMM, IMM_I, ALU_ADD   , Y, ST_XXX, LD_LW , WB_MEM, Y, CSR_N, N),
@@ -81,6 +87,7 @@ class Decoder extends RawModule {
     )
 
   // Control signals for Fetch
+  io.pc_sel  := signals(0)
   // Control signals for Execute
   io.A_sel   := signals(1)
   io.B_sel   := signals(2)
@@ -88,5 +95,7 @@ class Decoder extends RawModule {
   io.alu_op  := signals(4)
   // Control signals for WriteBack
   io.wb_en   := signals(9).asBool
+  io.wb_sel  := signals(8)
+  // Control signals for Halt
   io.halt    := signals(5)
 }

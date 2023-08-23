@@ -16,9 +16,6 @@ class Core extends Module {
 
   // --------------- Fetch Stage --------------- //
   val pc = RegInit(START_ADDR.U(XLEN.W))
-  // val pc = RegInit(UInt(XLEN.W), START_ADDR.U)
-  pc := pc + 4.U
-
 
   // --------------- Decode Stage --------------- //
   val inst = io.mem.resp.data
@@ -63,9 +60,26 @@ class Core extends Module {
   alu.io.src2 := opdata2
 
   // --------------- Execute Stage --------------- //
+  val wb_data = Mux1H(
+    Seq (
+      (decoder.io.wb_sel === WB_ALU) -> alu.io.alu_out,
+      (decoder.io.wb_sel === WB_PC4) -> (pc + 4.U),
+    )
+  )
+
+  // --------------- WriteBack Stage --------------- //
+  val npc = Mux1H(
+    Seq (
+      (decoder.io.pc_sel === PC_4) -> (pc + 4.U),
+      (decoder.io.pc_sel === PC_ALU) -> alu.io.add_out,
+      (decoder.io.pc_sel === PC_BR) -> Mux(alu.io.cmp_out === 1.U, pc + imm.asUInt, pc + 4.U),
+    )
+  )
+  pc := npc
+
   regfile.io.write.valid := decoder.io.wb_en
   regfile.io.write.addr  := inst(11,7)
-  regfile.io.write.data  := alu.io.alu_out
+  regfile.io.write.data  := wb_data
 
   // --------------- DPI-C halt --------------- //
   val halt = Module(new Halt)
@@ -74,10 +88,10 @@ class Core extends Module {
 
   // --------------- Top signal --------------- //
   io.mem.req.valid := !reset.asBool
-  io.mem.req.bits.addr := pc + 4.U
+  io.mem.req.bits.addr := npc
 
   io.test.valid := decoder.io.wb_en
   io.test.addr  := inst(11,7)
-  io.test.data  := alu.io.alu_out
+  io.test.data  := wb_data
 
 }

@@ -19,11 +19,12 @@ object Const {
   val Y = true.B
 
   // pc_sel
-  val PC_SEL_LENGTH = 2
+  val PC_SEL_LENGTH = 3
   val PC_4   = 0.U(PC_SEL_LENGTH.W)
   val PC_ALU = 1.U(PC_SEL_LENGTH.W)
   val PC_0   = 2.U(PC_SEL_LENGTH.W)
   val PC_EPC = 3.U(PC_SEL_LENGTH.W)
+  val PC_BR  = 4.U(PC_SEL_LENGTH.W)
 
   // A_sel
   val A_SEL_LENGTH = 1
@@ -92,6 +93,7 @@ object Const {
 
   // wb_sel
   val WB_SEL_LENGTH = 2
+  val WB_XXX = 0.U(WB_SEL_LENGTH.W)
   val WB_ALU = 0.U(WB_SEL_LENGTH.W)
   val WB_MEM = 1.U(WB_SEL_LENGTH.W)
   val WB_PC4 = 2.U(WB_SEL_LENGTH.W)
