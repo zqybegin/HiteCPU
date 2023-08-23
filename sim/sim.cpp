@@ -148,6 +148,7 @@ int main(int argc, char *argv[]) {
          */
         if (dut->clock == 1 && dut->io_mem_req_valid) {
             dut->io_mem_resp_data = mem_read(mem_req_addr, 4);
+            printf("0x%08x, 0x%08x\n", mem_req_addr, mem_read(mem_req_addr, 4));
         }
         dut->eval();
 
