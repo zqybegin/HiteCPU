@@ -69,7 +69,7 @@ void mem_write(addr_t addr, int len, word_t data) {
 
 void mem_init(char *img_file) {
     if (img_file == NULL) {
-        printf("No image is given. Use the default build-in image.\n");
+        printf(ANSI_FMT("No image is given. Use the default build-in image.\n", ANSI_FG_YELLOW));
         memcpy(guest_to_host(START_ENTRY), img, sizeof(img));
         return;
     }
@@ -95,9 +95,11 @@ void mem_init(char *img_file) {
 extern void ebreak(int *halt_valid, int *halt_value);
 
 int main(int argc, char *argv[]) {
+    assert(argc == 2 || argc == 3);
+
     // Initial of cpu memory
     char *img_file = NULL;
-    if (argc == 2) img_file = argv[1];
+    if (argc == 3) img_file = argv[2];
     mem_init(img_file);
 
     // Initial of VerilatedContext
@@ -110,7 +112,7 @@ int main(int argc, char *argv[]) {
     // Set vcd tracer
     VerilatedVcdC *tfp = new VerilatedVcdC;
     dut->trace(tfp, 0);
-    tfp->open("dump.vcd");
+    tfp->open(argv[1]);
 
     // DPI-C set scope
     const svScope scope = svGetScopeFromName("TOP.Toplevel.core.halt");
@@ -147,6 +149,7 @@ int main(int argc, char *argv[]) {
         if (dut->clock == 1 && dut->io_mem_req_valid) {
             dut->io_mem_resp_data = mem_read(mem_req_addr, 4);
         }
+        dut->eval();
 
         // make memory like Dram, it access data by combinatorial logic
         /* PS: if you use Dram, PC ,not PC+4, will be used as memory request addr simply.
@@ -180,4 +183,6 @@ int main(int argc, char *argv[]) {
 
     dut->final();
     tfp->close();
+
+    return halt_value;
 }

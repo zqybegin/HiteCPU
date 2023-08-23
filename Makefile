@@ -1,15 +1,16 @@
 include ../Makefile
 
 MODULE = Toplevel
-IMG =
+NAME ?= default
 
-V_RSC = $(shell find $(abspath ./generated) -name "*.v")
+BUILD_DIR = $(abspath ./build_dir/$(NAME))
+
+V_RSC = $(shell find $(abspath ./verilog) -name "*.v")
 C_RSC = $(shell find $(abspath ./sim) -name "*.cpp")
 SCALA_RSC = $(shell find $(abspath ./hiteCPU/src) -name "*.scala")
 
-V_RESULT = $(abspath ./generated/$(MODULE).v)
+V_RESULT = $(abspath ./verilog/$(MODULE).v)
 
-BUILD_DIR = $(abspath ./build_dir)
 EXE = $(BUILD_DIR)/V$(MODULE)
 VCD = $(BUILD_DIR)/dump.vcd
 
@@ -17,26 +18,32 @@ $(V_RESULT):$(SCALA_RSC)
 	mill hiteCPU.run
 
 $(EXE):$(V_RSC) $(C_RSC) $(V_RESULT)
-	verilator --trace -cc --build  --top-module $(MODULE) -exe $(V_RSC) $(C_RSC) --Mdir $(BUILD_DIR) -o $(EXE)
+	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
+	verilator --trace -cc --build --top-module $(MODULE) -exe $(V_RSC) $(C_RSC) --Mdir $(BUILD_DIR) -o $(EXE)
 
-.PHONY:verilog sim clean bsp echo
+$(VCD):$(EXE)
+	-$(EXE) $(VCD) $(IMG)
+
+.PHONY:verilog sim wave clean bsp echo
 
 verilog:$(V_RESULT)
 
 sim:$(EXE)
-	$(EXE) $(IMG)
-	mv ./dump.vcd $(VCD)
-	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	gtkwave $(BUILD_DIR)/dump.vcd
+	$(EXE) $(VCD) $(IMG)
+
+wave:$(VCD)
+	gtkwave $(VCD)
 
 clean:
-	rm -rf $(BUILD_DIR)
-	rm -rf ./generated
+	rm -rf ./build_dir/*
+	rm -rf ./verilog/*
 
 bsp:
 	mill mill.bsp.BSP/install
 
 echo:
+	@echo $(NAME)
+	@echo $(IMG)
 	@echo $(MODULE)
 	@echo $(V_RSC)
 	@echo $(C_RSC)

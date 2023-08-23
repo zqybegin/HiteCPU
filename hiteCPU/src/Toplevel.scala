@@ -21,7 +21,7 @@ class Toplevel extends Module {
 object Toplevel {
   def main(args: Array[String]): Unit = {
     //generate Hello.v in directory generated
-    emitVerilog( new Toplevel, Array( "-e", "verilog", "--target-dir", "generated"))
+    emitVerilog( new Toplevel, Array( "-e", "verilog", "--target-dir", "verilog"))
 
     //print verilog code in ternimal
     //println(getVerilogString(new Toplevel(32)))
