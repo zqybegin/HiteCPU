@@ -1,10 +1,11 @@
 #ifndef SIM_COMMON_H
 #define SIM_COMMON_H
 
+#include <stdio.h>
 #include <stdint.h>
 #include <assert.h>
 #include <string.h>
-#include <stdio.h>
+#include <inttypes.h>
 
 // ----------- Memory -----------
 #define MEM_SIZE 100000000
@@ -18,9 +19,9 @@ extern uint8_t pmem[MEM_SIZE];
 uint8_t *guest_to_host(paddr_t paddr);
 word_t mem_read(paddr_t addr, int len);
 void mem_write(paddr_t addr, int len, word_t data);
-void mem_init(char *img_file);
+long mem_init(char *img_file);
 
-// ----------- Printf -----------
+// ------- Beautiful Printf -----------
 #define ANSI_FG_BLACK   "\33[1;30m"
 #define ANSI_FG_RED     "\33[1;31m"
 #define ANSI_FG_GREEN   "\33[1;32m"
@@ -40,5 +41,24 @@ void mem_init(char *img_file);
 #define ANSI_NONE       "\33[0m"
 
 #define ANSI_FMT(str, fmt) fmt str ANSI_NONE
+
+#define FMT_WORD "0x%08" PRIx32
+
+// ----------- Difftest -----------
+enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
+
+typedef struct {
+    word_t gpr[32];
+    paddr_t pc;
+} CPU_state;
+
+extern CPU_state dut;
+extern const char *regs_name[];
+
+void difftest_init(char *ref_so_file, long img_size);
+void difftest_reset();
+bool difftest_step();
+
+void show_cpu_status(CPU_state *cpu);
 
 #endif

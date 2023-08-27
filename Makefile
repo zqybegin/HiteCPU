@@ -11,6 +11,8 @@ SCALA_RSC = $(shell find $(abspath ./hiteCPU/src) -name "*.scala")
 
 V_RESULT = $(abspath ./verilog/$(MODULE).v)
 
+DIFF_SO = $(abspath ../nemu/build/riscv32-nemu-interpreter-so)
+
 EXE = $(BUILD_DIR)/V$(MODULE)
 VCD = $(BUILD_DIR)/dump.vcd
 
@@ -22,14 +24,14 @@ $(EXE):$(V_RSC) $(C_RSC) $(V_RESULT)
 	verilator --trace -cc --build --top-module $(MODULE) -exe $(V_RSC) $(C_RSC) --Mdir $(BUILD_DIR) -o $(EXE)
 
 $(VCD):$(EXE)
-	-$(EXE) $(VCD) $(IMG)
+	-$(EXE) $(VCD) $(IMG) $(DIFF_SO)
 
 .PHONY:verilog sim wave clean bsp echo
 
 verilog:$(V_RESULT)
 
 sim:$(EXE)
-	$(EXE) $(VCD) $(IMG)
+	$(EXE) $(VCD) $(IMG) $(DIFF_SO)
 
 wave:$(VCD)
 	gtkwave $(VCD)

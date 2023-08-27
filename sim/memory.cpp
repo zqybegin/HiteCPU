@@ -31,11 +31,11 @@ void mem_write(paddr_t addr, int len, word_t data) {
     }
 }
 
-void mem_init(char *img_file) {
+long mem_init(char *img_file) {
     if (img_file == NULL) {
         printf(ANSI_FMT("No image is given. Use the default build-in image.\n", ANSI_FG_YELLOW));
         memcpy(guest_to_host(START_ENTRY), img, sizeof(img));
-        return;
+        return -1;
     }
 
     FILE *fp = fopen(img_file, "rb");
@@ -51,5 +51,5 @@ void mem_init(char *img_file) {
     assert(ret == 1);
 
     fclose(fp);
-    return;
+    return size;
 }
