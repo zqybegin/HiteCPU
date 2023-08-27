@@ -35,7 +35,7 @@ class RegFile extends Module {
   io.read2.data := Mux(io.read2.addr.orR, regs(io.read2.addr), 0.U)
   io.halt.data := Mux(io.halt.addr.orR, regs(io.halt.addr), 0.U)
 
-  when(io.write.valid) {
+  when(io.write.valid && io.write.addr.orR) {
     regs(io.write.addr) := io.write.data
   }
 }
