@@ -2,8 +2,10 @@
 .bloop/
 .nvim/
 build_dir/
+vcd_dir/
 verilog/
 test/generated/
+
 ### Project Specific stuff
 test_run_dir/*
 ### XilinxISE template
