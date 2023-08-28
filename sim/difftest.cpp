@@ -23,7 +23,6 @@ DifftestExecFunc ref_difftest_exec = NULL;
 DifftestRaiseIntrFunc ref_difftest_raise_intr = NULL;
 
 void show_cpu_status(CPU_state *cpu) {
-    printf("\n");
     printf("pc, " FMT_WORD "\n", cpu->pc);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 4; j++) {
@@ -68,12 +67,12 @@ void difftest_reset() {
 bool difftest_checkregs(CPU_state *ref) {
     bool flag = true;
     if (ref->pc != dut.pc) {
-        printf("Difftest fail: $PC " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", dut.pc, ref->pc);
+        printf(ANSI_FMT( "Difftest Fail: ", ANSI_FG_BLUE) "$PC " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", dut.pc, ref->pc);
         flag = false;
     }
     for (size_t i = 0; i < 32; i++) {
         if (ref->gpr[i] != dut.gpr[i]) {
-            printf("Difftest fail: %s " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", regs_name[i], dut.gpr[i], ref->gpr[i]);
+            printf(ANSI_FMT( "Difftest Fail: ", ANSI_FG_BLUE) "%s " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", regs_name[i], dut.gpr[i], ref->gpr[i]);
             flag = false;
         }
     }
@@ -83,12 +82,26 @@ bool difftest_checkregs(CPU_state *ref) {
 bool difftest_step() {
     CPU_state ref;
 
+    // ref simulate model exec
     ref_difftest_exec(1);
     ref_difftest_regcpy(&ref, DIFFTEST_TO_DUT);
 
-    show_cpu_status(&dut);
-
+    // compare dut with ref
     bool flag = difftest_checkregs(&ref);
+
+    if (flag == false) {
+        printf(ANSI_FMT("Before inst exec: ", ANSI_FG_BLUE));
+        show_cpu_status(&old_dut);
+        printf(ANSI_FMT("After  inst exec: ", ANSI_FG_BLUE));
+        show_cpu_status(&dut);
+    }
+
+    // record cpu status of the previous cycle
+    old_dut.pc = dut.pc;
+    for (size_t i = 0; i < 32; i++) {
+        old_dut.gpr[i] = dut.gpr[i];
+    }
+
     return flag;
 }
 
