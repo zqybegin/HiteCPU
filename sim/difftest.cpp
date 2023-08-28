@@ -24,10 +24,10 @@ DifftestRaiseIntrFunc ref_difftest_raise_intr = NULL;
 
 void show_cpu_status(CPU_state *cpu) {
     printf("\n");
-    printf("pc, 0x%08x\n", cpu->pc);
+    printf("pc, " FMT_WORD "\n", cpu->pc);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 4; j++) {
-            printf("%s: 0x%08x\t", regs_name[i * 4 + j], cpu->gpr[i]);
+            printf("%s: " FMT_WORD "\t", regs_name[i * 4 + j], cpu->gpr[i]);
         }
         printf("\n");
     }
