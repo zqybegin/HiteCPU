@@ -12,6 +12,9 @@
 // DPI-C access ebreak inst
 extern void ebreak(int *halt_valid, int *halt_value);
 
+// paser argument result
+extern char *img_file, *diff_so_file, *vcd_file;
+
 void get_cpu_status(const std::unique_ptr<VToplevel>& npc) {
     dut.pc = npc->rootp->Toplevel__DOT__core__DOT__pc;
     for (int i = 0; i < 32; i++) {
@@ -20,11 +23,10 @@ void get_cpu_status(const std::unique_ptr<VToplevel>& npc) {
 }
 
 int main(int argc, char *argv[]) {
-    // $(EXE) vcd_file img_file difftest_so
-    assert(argc == 4);
+    // read argument
+    if ( parse_args(argc, argv) != 0) return -1;
 
-    // Initial of npc memory
-    char *img_file = argv[2];
+    // Initial of Mem
     long img_size = mem_init(img_file);
 
     // Initial of VerilatedContext
@@ -37,14 +39,14 @@ int main(int argc, char *argv[]) {
     // Set vcd tracer
     VerilatedVcdC *tfp = new VerilatedVcdC;
     npc->trace(tfp, 0);
-    tfp->open(argv[1]);
+    tfp->open(vcd_file);
 
     // DPI-C set scope
     const svScope scope = svGetScopeFromName("TOP.Toplevel.core.halt");
     assert(scope);  // Check for nullptr if scope not found
     svSetScope(scope);
 
-    difftest_init(argv[3], img_size);
+    difftest_init(diff_so_file, img_size);
 
     bool before_reset = false;
     bool difftest_flag = true;

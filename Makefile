@@ -21,6 +21,9 @@ DIFF_SO = $(abspath ../nemu/build/riscv32-nemu-interpreter-so)
 EXE = $(BUILD_DIR)/V$(MODULE)
 VCD = $(VCD_DIR)/$(NAME).vcd
 
+# simulate execute flag
+SIM_FLAGS += --img=$(IMG) --vcd=$(VCD) --diff=$(DIFF_SO)
+
 # ----- COMPILE RULES -----
 $(V_RESULT):$(SCALA_RSC)
 	mill hiteCPU.run
@@ -30,7 +33,7 @@ $(EXE):$(C_RSC) $(V_RESULT)
 	verilator --trace -cc --build --top-module $(MODULE) -exe $(V_RSC) $(C_RSC) --Mdir $(BUILD_DIR) -o $(EXE)
 
 $(VCD):$(EXE)
-	-$(EXE) $(VCD) $(IMG) $(DIFF_SO)
+	-$(EXE) $(SIM_FLAGS)
 
 # ----- MAKEFILE TAGERTS -----
 .PHONY:verilog sim wave clean bsp echo
@@ -38,7 +41,7 @@ $(VCD):$(EXE)
 verilog:$(V_RESULT)
 
 sim:$(EXE)
-	$(EXE) $(VCD) $(IMG) $(DIFF_SO)
+	$(EXE) $(SIM_FLAGS)
 
 wave:$(VCD)
 	gtkwave $(VCD)
