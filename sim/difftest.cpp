@@ -26,7 +26,7 @@ void show_cpu_status(CPU_state *cpu) {
     printf("pc, " FMT_WORD "\n", cpu->pc);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 4; j++) {
-            printf("%s: " FMT_WORD "\t", regs_name[i * 4 + j], cpu->gpr[i]);
+            printf("%s: " FMT_WORD "\t", regs_name[i * 4 + j], cpu->gpr[i * 4 + j]);
         }
         printf("\n");
     }
@@ -34,6 +34,8 @@ void show_cpu_status(CPU_state *cpu) {
 
 void difftest_init(char *ref_so_file, long img_size) {
     assert(ref_so_file != NULL);
+
+    printf("The diff-file is %s\n", ref_so_file);
 
     void *handle;
     handle = dlopen(ref_so_file, RTLD_LAZY);
@@ -64,15 +66,15 @@ void difftest_reset() {
     ref_difftest_regcpy(&dut, DIFFTEST_TO_REF);
 }
 
-bool difftest_checkregs(CPU_state *ref) {
+bool difftest_checkregs(CPU_state *ref , paddr_t old_pc) {
     bool flag = true;
     if (ref->pc != dut.pc) {
-        printf(ANSI_FMT( "Difftest Fail: ", ANSI_FG_BLUE) "$PC " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", dut.pc, ref->pc);
+        printf(ANSI_FMT( "Difftest Fail: " FMT_WORD ": ", ANSI_FG_BLUE) "$PC " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", old_pc,  dut.pc, ref->pc);
         flag = false;
     }
     for (size_t i = 0; i < 32; i++) {
         if (ref->gpr[i] != dut.gpr[i]) {
-            printf(ANSI_FMT( "Difftest Fail: ", ANSI_FG_BLUE) "%s " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", regs_name[i], dut.gpr[i], ref->gpr[i]);
+            printf(ANSI_FMT( "Difftest Fail " FMT_WORD ": ", ANSI_FG_BLUE) "%s " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", old_pc, regs_name[i], dut.gpr[i], ref->gpr[i]);
             flag = false;
         }
     }
@@ -86,8 +88,10 @@ bool difftest_step() {
     ref_difftest_exec(1);
     ref_difftest_regcpy(&ref, DIFFTEST_TO_DUT);
 
+    // show_cpu_status(&dut);
+
     // compare dut with ref
-    bool flag = difftest_checkregs(&ref);
+    bool flag = difftest_checkregs(&ref, old_dut.pc);
 
     if (flag == false) {
         printf(ANSI_FMT("Before inst exec: ", ANSI_FG_BLUE));

@@ -1,4 +1,5 @@
 #include "common.h"
+#include <cstdio>
 
 uint8_t pmem[MEM_SIZE] = {};
 static const uint32_t img[] = {
@@ -16,18 +17,25 @@ uint8_t *guest_to_host(paddr_t paddr) { return pmem + paddr - START_ENTRY; }
 
 word_t mem_read(paddr_t addr, int len) {
     switch (len) {
-        case 1: return *(uint8_t  *)guest_to_host(addr);
-        case 2: return *(uint16_t *)guest_to_host(addr);
-        case 4: return *(uint32_t *)guest_to_host(addr);
-        default: assert(0);
+        case 0: return *(uint8_t  *)guest_to_host(addr);
+        case 1: return *(uint16_t *)guest_to_host(addr);
+        case 2: return *(uint32_t *)guest_to_host(addr);
+        default: {
+                printf("mem access len error, now is %d\n", len);
+                assert(0);
+        }
     }
 }
 
 void mem_write(paddr_t addr, int len, word_t data) {
     switch (len) {
-        case 1: *(uint8_t  *)guest_to_host(addr) = data; return;
-        case 2: *(uint16_t *)guest_to_host(addr) = data; return;
-        case 4: *(uint32_t *)guest_to_host(addr) = data; return;
+        case 0: *(uint8_t  *)guest_to_host(addr) = data; return;
+        case 1: *(uint16_t *)guest_to_host(addr) = data; return;
+        case 2: *(uint32_t *)guest_to_host(addr) = data; return;
+        default: {
+                printf("mem access len error, now is %d\n", len);
+                assert(0);
+        }
     }
 }
 

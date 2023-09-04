@@ -44,7 +44,7 @@ long mem_init(char *img_file);
 
 #define FMT_WORD "0x%08" PRIx32
 
-// ----------- Difftest -----------
+// ----------- Parse Argument -----------
 int parse_args(int argc, char *argv[]);
 
 // ----------- Difftest -----------

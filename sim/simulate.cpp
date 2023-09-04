@@ -48,19 +48,19 @@ int main(int argc, char *argv[]) {
 
     difftest_init(diff_so_file, img_size);
 
-    bool before_reset = false;
-    bool difftest_flag = true;
-    int halt_valid = 0;
-    int halt_value = -1;
-    while (difftest_flag && halt_valid != 1) {
+    bool before_reset = false, difftest_flag = true;
+    int difftest_over = 0;
+    int halt_valid = 0, halt_value = -1;
+    // Difftest needs to record the cycle where the error occurs, so it needs to delay the end of the simulation by 2 beats
+    while (difftest_over != 1 && halt_valid != 1) {
         // npc reset, because reset should be valid before all signal eval
         npc->reset = 0;
         if (contextp->time() < 3){
             npc->reset = 1;
         }
 
-        // ---- memory addr signal record ----
-        paddr_t mem_req_addr = npc->io_mem_req_bits_addr;
+        // ---- inst memory addr signal record ----
+        paddr_t mem_req_addr = npc->io_imem_req_bits_addr;
 
         // ---- sequential signal eval ----
         npc->clock ^= 1;
@@ -76,11 +76,16 @@ int main(int argc, char *argv[]) {
             }
             else {
                 // difftest core to compare
-                difftest_flag = difftest_step();
+                if (difftest_flag == true) {
+                    difftest_flag = difftest_step();
+                }
+                else {
+                    difftest_over++;
+                }
             }
         }
 
-        // ---- memory data signal return ----
+        // ---- inst memory data signal return ----
         // make memory like Bram, it access data by sequential logic
         /* PS: if you use Bram, PC+4 will be used as the input of register PC and memory request addr at the same time,
          *     so that after the next rising edge, the address stored in PC corresponds to the data returned by the memory.
@@ -91,9 +96,9 @@ int main(int argc, char *argv[]) {
          *            extremely confusing waveforms. And our expected behavior is: after the rising edge of the clock,
          *            request data to return, and calculate its behavior before the next rising edge of the clock arrives.
          */
-        if (npc->clock == 1 && npc->io_mem_req_valid) {
-            npc->io_mem_resp_data = mem_read(mem_req_addr, 4);
-            printf( FMT_WORD ", " FMT_WORD "\n", mem_req_addr, mem_read(mem_req_addr, 4));
+        if (npc->clock == 1 && npc->io_imem_req_valid) {
+            npc->io_imem_resp_data = mem_read(mem_req_addr, 2);
+            // printf( FMT_WORD ", " FMT_WORD "\n", mem_req_addr, mem_read(mem_req_addr, 4));
         }
         npc->eval();
 
@@ -112,8 +117,16 @@ int main(int argc, char *argv[]) {
         // }
         // npc->eval();
 
-        // ---- combinatorial signal eval ----
-
+        if (npc->clock == 0 && npc->io_dmem_req_valid) {
+            if (npc->io_dmem_req_bits_wr) {
+                printf( "Write" FMT_WORD ", " FMT_WORD "\n", npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size);
+                mem_write(npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size, npc->io_dmem_req_bits_data);
+            } else {
+                printf( "READ" FMT_WORD ", " FMT_WORD "\n", npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size);
+                npc->io_dmem_resp_data = mem_read(npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size);
+            }
+        }
+        npc->eval();
 
         // ---- trace signal to waveform ----
         tfp->dump(contextp->time());
@@ -132,7 +145,7 @@ int main(int argc, char *argv[]) {
     // print hit good/fail and return value
     if (halt_valid == 1){
         printf((halt_value == 0? ANSI_FMT("HIT GOOD TRAP\n", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP\n", ANSI_FG_RED)));
-        return 0;
+        return halt_value;
     } else {
         printf(ANSI_FMT("HIT BAD TRAP\n", ANSI_FG_RED));
         return 1;
