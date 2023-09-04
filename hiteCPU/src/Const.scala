@@ -76,20 +76,19 @@ object Const {
   def cmpEq(alu_op: UInt) = !alu_op(3)
 
   // st_type
-  val ST_SEL_LENGTH = 2
-  val ST_XXX = 0.U(ST_SEL_LENGTH.W)
-  val ST_SW  = 1.U(ST_SEL_LENGTH.W)
-  val ST_SH  = 2.U(ST_SEL_LENGTH.W)
-  val ST_SB  = 3.U(ST_SEL_LENGTH.W)
-
-  // ld_type
-  val LD_SEL_LENGTH = 3
-  val LD_XXX = 0.U(LD_SEL_LENGTH.W)
-  val LD_LW  = 1.U(LD_SEL_LENGTH.W)
-  val LD_LH  = 2.U(LD_SEL_LENGTH.W)
-  val LD_LB  = 3.U(LD_SEL_LENGTH.W)
-  val LD_LHU = 4.U(LD_SEL_LENGTH.W)
-  val LD_LBU = 5.U(LD_SEL_LENGTH.W)
+  val MEM_SEL_LENGTH = 4
+  val MEM_XXX = 15.U(MEM_SEL_LENGTH.W)  //1111
+  val MEM_LW  = 2.U(MEM_SEL_LENGTH.W)   //0010
+  val MEM_LH  = 1.U(MEM_SEL_LENGTH.W)   //0001
+  val MEM_LB  = 0.U(MEM_SEL_LENGTH.W)   //0000
+  val MEM_LHU = 5.U(MEM_SEL_LENGTH.W)   //0101
+  val MEM_LBU = 4.U(MEM_SEL_LENGTH.W)   //0100
+  val MEM_SW  = 10.U(MEM_SEL_LENGTH.W)  //1010
+  val MEM_SH  = 9.U(MEM_SEL_LENGTH.W)   //1001
+  val MEM_SB  = 8.U(MEM_SEL_LENGTH.W)   //1000
+  def isStore(alu_op: UInt) = alu_op(3)
+  def getSize(alu_op: UInt) = alu_op(1,0)
+  def loadSign(alu_op: UInt) = alu_op(2)
 
   // wb_sel
   val WB_SEL_LENGTH = 2
