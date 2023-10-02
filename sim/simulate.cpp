@@ -15,7 +15,7 @@ extern void ebreak(int *halt_valid, int *halt_value);
 // paser argument result
 extern char *img_file, *diff_so_file, *vcd_file;
 
-void get_cpu_status(const std::unique_ptr<VToplevel>& npc) {
+void get_cpu_status(const std::unique_ptr<VToplevel> &npc) {
     dut.pc = npc->rootp->Toplevel__DOT__core__DOT__pc;
     for (int i = 0; i < 32; i++) {
         dut.gpr[i] = npc->rootp->Toplevel__DOT__core__DOT__regfile__DOT__regs[i];
@@ -24,7 +24,8 @@ void get_cpu_status(const std::unique_ptr<VToplevel>& npc) {
 
 int main(int argc, char *argv[]) {
     // read argument
-    if ( parse_args(argc, argv) != 0) return -1;
+    if (parse_args(argc, argv) != 0)
+        return -1;
 
     // Initial of Mem
     long img_size = mem_init(img_file);
@@ -34,7 +35,9 @@ int main(int argc, char *argv[]) {
     contextp->traceEverOn(true);
 
     // Initial of top module
-    const std::unique_ptr<VToplevel> npc{new VToplevel{contextp.get(), "TOP"}};
+    const std::unique_ptr<VToplevel> npc{
+        new VToplevel{contextp.get(), "TOP"}
+    };
 
     // Set vcd tracer
     VerilatedVcdC *tfp = new VerilatedVcdC;
@@ -43,7 +46,7 @@ int main(int argc, char *argv[]) {
 
     // DPI-C set scope
     const svScope scope = svGetScopeFromName("TOP.Toplevel.core.halt");
-    assert(scope);  // Check for nullptr if scope not found
+    assert(scope); // Check for nullptr if scope not found
     svSetScope(scope);
 
     difftest_init(diff_so_file, img_size);
@@ -55,7 +58,7 @@ int main(int argc, char *argv[]) {
     while (difftest_over != 1 && halt_valid != 1) {
         // npc reset, because reset should be valid before all signal eval
         npc->reset = 0;
-        if (contextp->time() < 3){
+        if (contextp->time() < 3) {
             npc->reset = 1;
         }
 
@@ -73,13 +76,11 @@ int main(int argc, char *argv[]) {
             if (before_reset) {
                 // reset ref in the first cycle after reset signal disappears
                 difftest_reset();
-            }
-            else {
+            } else {
                 // difftest core to compare
                 if (difftest_flag == true) {
                     difftest_flag = difftest_step();
-                }
-                else {
+                } else {
                     difftest_over++;
                 }
             }
@@ -119,10 +120,10 @@ int main(int argc, char *argv[]) {
 
         if (npc->clock == 0 && npc->io_dmem_req_valid) {
             if (npc->io_dmem_req_bits_wr) {
-                printf( "Write" FMT_WORD ", " FMT_WORD "\n", npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size);
+                printf("Write" FMT_WORD ", " FMT_WORD "\n", npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size);
                 mem_write(npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size, npc->io_dmem_req_bits_data);
             } else {
-                printf( "READ" FMT_WORD ", " FMT_WORD "\n", npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size);
+                printf("READ" FMT_WORD ", " FMT_WORD "\n", npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size);
                 npc->io_dmem_resp_data = mem_read(npc->io_dmem_req_bits_addr, npc->io_dmem_req_bits_size);
             }
         }
@@ -133,7 +134,8 @@ int main(int argc, char *argv[]) {
         contextp->timeInc(1);
 
         // ---- difftest: record the reset signal of the previous cycle ----
-        if (npc->clock == 1) before_reset = (npc->reset == 1);
+        if (npc->clock == 1)
+            before_reset = (npc->reset == 1);
 
         // ---- halt function to exit ----
         ebreak(&halt_valid, &halt_value);
@@ -143,8 +145,8 @@ int main(int argc, char *argv[]) {
     tfp->close();
 
     // print hit good/fail and return value
-    if (halt_valid == 1){
-        printf((halt_value == 0? ANSI_FMT("HIT GOOD TRAP\n", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP\n", ANSI_FG_RED)));
+    if (halt_valid == 1) {
+        printf((halt_value == 0 ? ANSI_FMT("HIT GOOD TRAP\n", ANSI_FG_GREEN) : ANSI_FMT("HIT BAD TRAP\n", ANSI_FG_RED)));
         return halt_value;
     } else {
         printf(ANSI_FMT("HIT BAD TRAP\n", ANSI_FG_RED));

@@ -6,13 +6,13 @@
 CPU_state dut;
 CPU_state old_dut;
 
-const char *regs_name[] = {"$0", "ra", "sp",  "gp",  "tp", "t0", "t1", "t2",
-                           "s0", "s1", "a0",  "a1",  "a2", "a3", "a4", "a5",
-                           "a6", "a7", "s2",  "s3",  "s4", "s5", "s6", "s7",
+const char *regs_name[] = {"$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
+                           "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
+                           "a6", "a7", "s2", "s3", "s4", "s5", "s6", "s7",
                            "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
 
-using DifftestMemcpyFunc = void (*)(paddr_t, void*, size_t, bool);
-using DifftestRegcpyFunc = void (*)(void*, bool);
+using DifftestMemcpyFunc = void (*)(paddr_t, void *, size_t, bool);
+using DifftestRegcpyFunc = void (*)(void *, bool);
 using DifftestExecFunc = void (*)(uint64_t);
 using DifftestRaiseIntrFunc = void (*)(uint64_t);
 using DifftestInitFunc = void (*)(int);
@@ -66,15 +66,15 @@ void difftest_reset() {
     ref_difftest_regcpy(&dut, DIFFTEST_TO_REF);
 }
 
-bool difftest_checkregs(CPU_state *ref , paddr_t old_pc) {
+bool difftest_checkregs(CPU_state *ref, paddr_t old_pc) {
     bool flag = true;
     if (ref->pc != dut.pc) {
-        printf(ANSI_FMT( "Difftest Fail: " FMT_WORD ": ", ANSI_FG_BLUE) "$PC " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", old_pc,  dut.pc, ref->pc);
+        printf(ANSI_FMT("Difftest Fail: " FMT_WORD ": ", ANSI_FG_BLUE) "$PC " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", old_pc, dut.pc, ref->pc);
         flag = false;
     }
     for (size_t i = 0; i < 32; i++) {
         if (ref->gpr[i] != dut.gpr[i]) {
-            printf(ANSI_FMT( "Difftest Fail " FMT_WORD ": ", ANSI_FG_BLUE) "%s " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", old_pc, regs_name[i], dut.gpr[i], ref->gpr[i]);
+            printf(ANSI_FMT("Difftest Fail " FMT_WORD ": ", ANSI_FG_BLUE) "%s " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", old_pc, regs_name[i], dut.gpr[i], ref->gpr[i]);
             flag = false;
         }
     }
@@ -108,5 +108,3 @@ bool difftest_step() {
 
     return flag;
 }
-
-

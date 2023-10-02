@@ -8,7 +8,7 @@
 #include <inttypes.h>
 
 // ----------- Memory -----------
-#define MEM_SIZE 100000000
+#define MEM_SIZE    100000000
 #define START_ENTRY 0x80000000
 
 typedef uint32_t paddr_t;
@@ -48,7 +48,10 @@ long mem_init(char *img_file);
 int parse_args(int argc, char *argv[]);
 
 // ----------- Difftest -----------
-enum { DIFFTEST_TO_DUT, DIFFTEST_TO_REF };
+enum {
+    DIFFTEST_TO_DUT,
+    DIFFTEST_TO_REF
+};
 
 typedef struct {
     word_t gpr[32];
