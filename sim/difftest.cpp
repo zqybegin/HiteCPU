@@ -1,7 +1,9 @@
 #include <cstdio>
 #include <dlfcn.h>
+#include <memory.h>
 
-#include "common.h"
+#include "include/diff.h"
+#include "include/debug.h"
 
 CPU_state dut;
 CPU_state old_dut;
@@ -23,7 +25,7 @@ DifftestExecFunc ref_difftest_exec = NULL;
 DifftestRaiseIntrFunc ref_difftest_raise_intr = NULL;
 
 void show_cpu_status(CPU_state *cpu) {
-    printf("pc, " FMT_WORD "\n", cpu->pc);
+    printf("pc, " FMT_PADDR "\n", cpu->pc);
     for (int i = 0; i < 8; i++) {
         for (int j = 0; j < 4; j++) {
             printf("%s: " FMT_WORD "\t", regs_name[i * 4 + j], cpu->gpr[i * 4 + j]);
@@ -59,7 +61,7 @@ void difftest_init(char *ref_so_file, long img_size) {
     printf("Differential testing: %s\n", ANSI_FMT("ON", ANSI_FG_GREEN));
 
     ref_difftest_init(0);
-    ref_difftest_memcpy(START_ENTRY, guest_to_host(START_ENTRY), img_size, DIFFTEST_TO_REF);
+    ref_difftest_memcpy(CONFIG_MBASE, guest_to_host(CONFIG_MBASE), img_size, DIFFTEST_TO_REF);
 }
 
 void difftest_reset() {
@@ -69,12 +71,12 @@ void difftest_reset() {
 bool difftest_checkregs(CPU_state *ref, paddr_t old_pc) {
     bool flag = true;
     if (ref->pc != dut.pc) {
-        printf(ANSI_FMT("Difftest Fail: " FMT_WORD ": ", ANSI_FG_BLUE) "$PC " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", old_pc, dut.pc, ref->pc);
+        printf(ANSI_FMT("Difftest Fail: " FMT_PADDR ": ", ANSI_FG_BLUE) "$PC " FMT_PADDR "(dut) => " FMT_PADDR "(ref)\n", old_pc, dut.pc, ref->pc);
         flag = false;
     }
     for (size_t i = 0; i < 32; i++) {
         if (ref->gpr[i] != dut.gpr[i]) {
-            printf(ANSI_FMT("Difftest Fail " FMT_WORD ": ", ANSI_FG_BLUE) "%s " FMT_WORD "(dut) => " FMT_WORD "(ref)\n", old_pc, regs_name[i], dut.gpr[i], ref->gpr[i]);
+            printf(ANSI_FMT("Difftest Fail " FMT_PADDR ": ", ANSI_FG_BLUE) "%s " FMT_PADDR "(dut) => " FMT_PADDR "(ref)\n", old_pc, regs_name[i], dut.gpr[i], ref->gpr[i]);
             flag = false;
         }
     }

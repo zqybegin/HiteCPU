@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <getopt.h>
 
-#include "common.h"
+#include "include/debug.h"
 
 // initial file variable
 char *img_file;

@@ -1,7 +1,8 @@
-#include "common.h"
-#include <cstdio>
+#include <string.h>
 
-uint8_t pmem[MEM_SIZE] = {};
+#include "include/memory.h"
+
+uint8_t pmem[CONFIG_MSIZE] = {};
 static const uint32_t img[] = {
     0x00100113,
     0x00110113,
@@ -14,37 +15,32 @@ static const uint32_t img[] = {
 };
 
 uint8_t *guest_to_host(paddr_t paddr) {
-    return pmem + paddr - START_ENTRY;
+    return pmem + paddr - CONFIG_MBASE;
 }
 
 word_t mem_read(paddr_t addr, int len) {
-    switch (len) {
-        case 0: return *(uint8_t *)guest_to_host(addr);
-        case 1: return *(uint16_t *)guest_to_host(addr);
-        case 2: return *(uint32_t *)guest_to_host(addr);
-        default: {
-            printf("mem access len error, now is %d\n", len);
-            assert(0);
-        }
-    }
+    // if (in_pmem(addr)) {
+    //     return host_read(guest_to_host(addr), len);
+    // } else {
+    //     return mmio_read(addr, len);
+    // }
+    return host_read(guest_to_host(addr), len);
 }
 
 void mem_write(paddr_t addr, int len, word_t data) {
-    switch (len) {
-        case 0: *(uint8_t *)guest_to_host(addr) = data; return;
-        case 1: *(uint16_t *)guest_to_host(addr) = data; return;
-        case 2: *(uint32_t *)guest_to_host(addr) = data; return;
-        default: {
-            printf("mem access len error, now is %d\n", len);
-            assert(0);
-        }
-    }
+    // if (in_pmem(addr)) {
+    //     host_write(guest_to_host(addr), len, data);
+    //     return;
+    // } else {
+    //     mmio_write(addr, len, data);
+    // }
+    host_write(guest_to_host(addr), len, data);
 }
 
 long mem_init(char *img_file) {
     if (img_file == NULL) {
         printf(ANSI_FMT("No image is given. Use the default build-in image.\n", ANSI_FG_YELLOW));
-        memcpy(guest_to_host(START_ENTRY), img, sizeof(img));
+        memcpy(guest_to_host(CONFIG_MBASE), img, sizeof(img));
         return -1;
     }
 
@@ -57,7 +53,7 @@ long mem_init(char *img_file) {
     printf("The image is %s, size = %ld\n", img_file, size);
 
     fseek(fp, 0, SEEK_SET);
-    int ret = fread(guest_to_host(START_ENTRY), size, 1, fp);
+    int ret = fread(guest_to_host(CONFIG_MBASE), size, 1, fp);
     assert(ret == 1);
 
     fclose(fp);

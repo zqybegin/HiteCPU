@@ -7,7 +7,9 @@
 #include "svdpi.h"
 #include "VToplevel__Dpi.h"
 
-#include "common.h"
+#include "include/diff.h"
+#include "include/memory.h"
+#include "include/debug.h"
 
 // DPI-C access ebreak inst
 extern void ebreak(int *halt_valid, int *halt_value);
@@ -24,6 +26,7 @@ void get_cpu_status(const std::unique_ptr<VToplevel> &npc) {
 
 int main(int argc, char *argv[]) {
     // read argument
+    extern int parse_args(int argc, char *argv[]);
     if (parse_args(argc, argv) != 0)
         return -1;
 
