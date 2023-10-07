@@ -40,8 +40,8 @@ void ftrace_log(word_t inst, paddr_t addr){
     int rd = BITS(inst, 11, 7);
     int rs1 = BITS(inst, 19, 15);
 
-    fprintf(ftrace_fp, FMT_WORD " ", addr);
     if (type == JAL && LINK(rd)) {
+        fprintf(ftrace_fp, FMT_WORD " ", addr);
         word_t imm = (SEXT(BITS(inst, 31, 31), 1) << 20) | (BITS(inst, 30, 21) << 1) | (BITS(inst, 20, 20) << 11) | (BITS(inst, 19, 12) << 12);
         paddr_t jump_addr = addr + imm;
         char *func_name = FuncList_search(func_list, jump_addr);
@@ -53,6 +53,7 @@ void ftrace_log(word_t inst, paddr_t addr){
     if (type == JALR && (LINK(rd) || LINK(rs1)) ) {
         word_t imm = SEXT(BITS(inst, 31, 20), 12);
         paddr_t jump_addr = ZERO((dut.gpr[rs1] + imm), 1);
+        fprintf(ftrace_fp, FMT_WORD " ", addr);
         if ( !LINK(rd) && LINK(rs1) ) {
             // search func_name according jump addr
             char *func_name = FuncList_search(func_list, addr);

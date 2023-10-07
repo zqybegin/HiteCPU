@@ -51,7 +51,7 @@ long mem_init(char *img_file) {
     fseek(fp, 0, SEEK_END);
     long size = ftell(fp);
 
-    printf(ANSI_FMT("Use the specified image\n", ANSI_FG_YELLOW));
+    printf(ANSI_FMT("Use the specified image\n", ANSI_FG_BLUE));
     printf("The image is %s, size = %ld\n", img_file, size);
 
     fseek(fp, 0, SEEK_SET);
