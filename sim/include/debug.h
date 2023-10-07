@@ -9,7 +9,7 @@
 #define Assert(cond, format, ...)          \
     do {                                   \
         if (!(cond)) {                     \
-            printf(format, ##__VA_ARGS__); \
+            printf(ANSI_FMT(format, ANSI_FG_RED), ##__VA_ARGS__); \
             assert(cond);                  \
         }                                  \
     } while (0)

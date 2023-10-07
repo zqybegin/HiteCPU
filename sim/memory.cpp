@@ -1,6 +1,9 @@
+#include <cstdio>
 #include <string.h>
 
-#include "include/memory.h"
+#include "common.h"
+#include "map.h"
+#include "memory.h"
 
 uint8_t pmem[CONFIG_MSIZE] = {};
 static const uint32_t img[] = {
@@ -19,29 +22,27 @@ uint8_t *guest_to_host(paddr_t paddr) {
 }
 
 word_t mem_read(paddr_t addr, int len) {
-    // if (in_pmem(addr)) {
-    //     return host_read(guest_to_host(addr), len);
-    // } else {
-    //     return mmio_read(addr, len);
-    // }
-    return host_read(guest_to_host(addr), len);
+    if (in_pmem(addr)) {
+        return host_read(guest_to_host(addr), len);
+    } else {
+        MUXDEF(CONFIG_DEVICE, return mmio_read(addr, len), Assert(0,"No Device but read addr in mmio\n"));
+    }
 }
 
 void mem_write(paddr_t addr, int len, word_t data) {
-    // if (in_pmem(addr)) {
-    //     host_write(guest_to_host(addr), len, data);
-    //     return;
-    // } else {
-    //     mmio_write(addr, len, data);
-    // }
-    host_write(guest_to_host(addr), len, data);
+    if (in_pmem(addr)) {
+        host_write(guest_to_host(addr), len, data);
+        return;
+    } else {
+        MUXDEF(CONFIG_DEVICE, mmio_write(addr, len, data), Assert(0,"No Device but write addr in mmio\n"));
+    }
 }
 
 long mem_init(char *img_file) {
     if (img_file == NULL) {
-        printf(ANSI_FMT("No image is given. Use the default build-in image.\n", ANSI_FG_YELLOW));
+        printf(ANSI_FMT("No image is given. Use the default build-in image.\n", ANSI_FG_BLUE));
         memcpy(guest_to_host(CONFIG_MBASE), img, sizeof(img));
-        return -1;
+        return sizeof(img);
     }
 
     FILE *fp = fopen(img_file, "rb");
@@ -50,6 +51,7 @@ long mem_init(char *img_file) {
     fseek(fp, 0, SEEK_END);
     long size = ftell(fp);
 
+    printf(ANSI_FMT("Use the specified image\n", ANSI_FG_YELLOW));
     printf("The image is %s, size = %ld\n", img_file, size);
 
     fseek(fp, 0, SEEK_SET);

@@ -3,34 +3,44 @@ include ../Makefile
 MODULE = Toplevel
 NAME ?= default
 
-BUILD_DIR = $(abspath ./build_dir)
-VCD_DIR = $(abspath ./vcd_dir)
-
-# source code
+# ----- source code -----
 V_RSC = $(shell find $(abspath ./verilog) -name "*.v")
+H_RSC = $(shell find $(abspath ./sim) -name "*.h")
 C_RSC = $(shell find $(abspath ./sim) -name "*.cpp")
 SCALA_RSC = $(shell find $(abspath ./hiteCPU/src) -name "*.scala")
+V_RESULT = $(abspath ./verilog/$(MODULE).v) # a representative for generating verilog code
 
-# a representative for generating verilog code
-V_RESULT = $(abspath ./verilog/$(MODULE).v)
-
-# a ref model used for difftest
-DIFF_SO = $(abspath ../nemu/build/riscv32-nemu-interpreter-so)
-
-# build target
+# ----- build target -----
+BUILD_DIR = $(abspath ./build_dir)
+VCD_DIR = $(abspath ./vcd_dir)
 EXE = $(BUILD_DIR)/V$(MODULE)
 VCD = $(VCD_DIR)/$(NAME).vcd
 
-# simulate execute flag
-SIM_FLAGS += --img=$(IMG) --vcd=$(VCD) --diff=$(DIFF_SO)
+# ----- verilator exec flag -----
+INCLUDE = /home/zqybegin/Workstation/ysyx-workbench/npc/sim/include
+EMU_CXXFLAGS = -I$(INCLUDE)
+
+VERILATOR_FLAGS =                   \
+ 	--build --exe                   \
+	--trace                         \
+	--cc -O3 --top-module $(MODULE) \
+ 	-CFLAGS "$(EMU_CXXFLAGS)"       \
+	--Mdir $(BUILD_DIR) -o $(EXE)
+
+# ----- simulate execute flag -----
+DIFF_SO = $(abspath ../nemu/build/riscv32-nemu-interpreter-so)
+SIM_FLAGS += --vcd=$(VCD)
+SIM_FLAGS += --diff=$(DIFF_SO)
+SIM_FLAGS += $(if $(IMG), --img=$(IMG).bin --elf=$(IMG).elf,)
+SIM_FLAGS += $(if $(LOG), --log=$(LOG),)
 
 # ----- COMPILE RULES -----
 $(V_RESULT):$(SCALA_RSC)
 	mill hiteCPU.run
 
-$(EXE):$(C_RSC) $(V_RESULT)
+$(EXE):$(C_RSC) $(V_RESULT) $(H_RSC)
 	$(call git_commit, "sim RTL") # DO NOT REMOVE THIS LINE!!!
-	verilator --trace -cc --build --top-module $(MODULE) -exe $(V_RSC) $(C_RSC) --Mdir $(BUILD_DIR) -o $(EXE)
+	verilator $(VERILATOR_FLAGS) $(V_RSC) $(C_RSC)
 
 $(VCD):$(EXE)
 	-$(EXE) $(SIM_FLAGS)
@@ -53,12 +63,3 @@ clean:
 
 bsp:
 	mill mill.bsp.BSP/install
-
-echo:
-	@echo $(NAME)
-	@echo $(IMG)
-	@echo $(MODULE)
-	@echo $(V_RSC)
-	@echo $(C_RSC)
-	@echo $(BUILD_DIR)
-	@echo $(EXE)

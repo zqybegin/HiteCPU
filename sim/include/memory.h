@@ -2,19 +2,7 @@
 #define SIM_MEMORY_H
 
 #include "debug.h"
-
-#include <stdint.h>
-
-#define CONFIG_MBASE 0x80000000
-#define CONFIG_MSIZE 0x8000000
-
-#define PMEM_LEFT  ((paddr_t)CONFIG_MBASE)
-#define PMEM_RIGHT ((paddr_t)CONFIG_MBASE + CONFIG_MSIZE - 1)
-
-typedef uint32_t paddr_t;
-typedef uint32_t word_t;
-
-extern uint8_t pmem[CONFIG_MSIZE];
+#include "common.h"
 
 uint8_t *guest_to_host(paddr_t paddr);
 word_t mem_read(paddr_t addr, int len);

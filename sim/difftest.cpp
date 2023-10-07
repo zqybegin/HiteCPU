@@ -2,11 +2,13 @@
 #include <dlfcn.h>
 #include <memory.h>
 
-#include "include/diff.h"
-#include "include/debug.h"
+#include "common.h"
+#include "diff.h"
+#include "debug.h"
 
-CPU_state dut;
 CPU_state old_dut;
+
+static bool is_skip_ref = false;
 
 const char *regs_name[] = {"$0", "ra", "sp", "gp", "tp", "t0", "t1", "t2",
                            "s0", "s1", "a0", "a1", "a2", "a3", "a4", "a5",
@@ -37,7 +39,8 @@ void show_cpu_status(CPU_state *cpu) {
 void difftest_init(char *ref_so_file, long img_size) {
     assert(ref_so_file != NULL);
 
-    printf("The diff-file is %s\n", ref_so_file);
+    printf(ANSI_FMT("Differential test: ON\n", ANSI_FG_BLUE));
+    printf("The diff-file is in %s\n", ref_so_file);
 
     void *handle;
     handle = dlopen(ref_so_file, RTLD_LAZY);
@@ -58,14 +61,16 @@ void difftest_init(char *ref_so_file, long img_size) {
     DifftestInitFunc ref_difftest_init = reinterpret_cast<DifftestInitFunc>(dlsym(handle, "difftest_init"));
     assert(ref_difftest_init);
 
-    printf("Differential testing: %s\n", ANSI_FMT("ON", ANSI_FG_GREEN));
-
     ref_difftest_init(0);
     ref_difftest_memcpy(CONFIG_MBASE, guest_to_host(CONFIG_MBASE), img_size, DIFFTEST_TO_REF);
 }
 
 void difftest_reset() {
     ref_difftest_regcpy(&dut, DIFFTEST_TO_REF);
+}
+
+void difftest_skip() {
+    is_skip_ref = true;
 }
 
 bool difftest_checkregs(CPU_state *ref, paddr_t old_pc) {
@@ -86,13 +91,18 @@ bool difftest_checkregs(CPU_state *ref, paddr_t old_pc) {
 bool difftest_step() {
     CPU_state ref;
 
-    // ref simulate model exec
+    if (is_skip_ref == true) {
+        ref_difftest_regcpy(&dut, DIFFTEST_TO_REF);
+        is_skip_ref = false;
+        return true;
+    }
+
+    // ----- ref simulate model exec -----
     ref_difftest_exec(1);
     ref_difftest_regcpy(&ref, DIFFTEST_TO_DUT);
-
     // show_cpu_status(&dut);
 
-    // compare dut with ref
+    // ----- compare dut with ref -----
     bool flag = difftest_checkregs(&ref, old_dut.pc);
 
     if (flag == false) {
@@ -102,7 +112,7 @@ bool difftest_step() {
         show_cpu_status(&dut);
     }
 
-    // record cpu status of the previous cycle
+    // ----- record cpu status of the previous cycle -----
     old_dut.pc = dut.pc;
     for (size_t i = 0; i < 32; i++) {
         old_dut.gpr[i] = dut.gpr[i];

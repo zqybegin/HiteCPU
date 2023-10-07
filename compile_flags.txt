@@ -1,0 +1,4 @@
+-I/home/zqybegin/Workstation/ysyx-workbench/npc/sim/include
+-D__GUEST_ISA__=riscv32
+-I.
+-I/include/boost-0
